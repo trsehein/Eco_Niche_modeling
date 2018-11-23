@@ -1,0 +1,57 @@
+---
+title: "PCA for SynNiche"
+author: "TRS"
+date: "11/23/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This code provides the framework to construct a PCA of multiple Syndiniales species and determine the variables that describe observed differences in community composition. 
+First, import a dataframe with the species observations and associated environmental factors.
+```{r}
+occ.sp = read.table("species_forECOSPAT.txt", header=T, row.names =1, sep ="\t")
+head(occ.sp)
+```
+
+To construct a PCA with many species, use the following code:
+
+First, group by "species" or strain of Syndiniales. Here we are only using presence data.
+
+```{r}
+spGroup <- factor(occ.sp$species)
+dev.off() ##clear plot
+```
+
+Run PCA
+This is the basic plot, which does not show variable vectors
+
+```{r}
+synPCA <- prcomp(scale(occ.sp[,-1]))
+plot(synPCA$x[,1:2], col = spGroup)##Basic plot
+```
+
+For more advanced plotting, use:
+
+```{r}
+library(pcaMethods)
+synPCAmethods <- pca(occ.sp[,-1], scale = "uv", center = T, nPcs = 2, method = "svd")
+dev.off()
+par(mar=c(1,1,1,1)) 
+slplot(synPCAmethods, scoresLoadings = c(T,T), sl = spGroup)
+summary(synPCAmethods)
+```
+
+For publications, I would use the following toolbox. This one draws ellipses to show each "species niche" and plots the variable vectors.
+
+```{r}
+library(factoextra)
+library(ggplot2)
+fviz_pca_biplot(synPCA, axes=c(1, 2), geom.ind="point", geom.var= "arrow","text", col.ind = spGroup,addEllipses = TRUE, ellipse.type = "confidence", legend.title = "Groups", repel = FALSE)
+```
+
+Even this method does not label the variables, but that information can be found on the previous plot.
